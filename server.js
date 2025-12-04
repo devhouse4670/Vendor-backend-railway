@@ -25,7 +25,7 @@ app.use("/api/vendors", vendorRoutes);  // ⬅ IMPORTANT FIX
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () =>
-  console.log(`🚀 Server running on https://winexch.blog:${PORT}`)
+  console.log(`🚀 Server running on http://localhost:${PORT}`)
 );
 
 app.use("/api/campaigns", campaignRoutes);
