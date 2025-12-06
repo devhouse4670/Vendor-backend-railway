@@ -33,7 +33,7 @@ app.options('*', cors(corsOptions));
 
 // Body parser - AFTER CORS
 app.use(express.json());
-
+app.use(cookieParser());
 // Root Route
 app.get("/", (req, res) => {
   res.json({ 
