@@ -1,15 +1,16 @@
 import express from "express";
 import mongoose from "mongoose";
-import cors from "cors";
+import cors from "cors";  // ✅ Keep only this import
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/userRoutes.js";
 import dataRoutes from "./routes/data.js";
-const cors = require('cors');
+
+// ❌ REMOVE THIS LINE:
+// const cors = require('cors');
 
 dotenv.config();
-
 const app = express();
 
 // Trust proxy if behind a proxy (Render, Heroku)
@@ -18,8 +19,8 @@ app.set("trust proxy", 1);
 // CORS setup
 const allowedOrigins = [
   'https://vendor-frontend-omega.vercel.app',
-  'http://localhost:3000', // for local development
-  'http://localhost:5173'  // if using Vite
+  'http://localhost:3000',
+  'http://localhost:5173'
 ];
 
 app.use(cors({
@@ -33,13 +34,20 @@ app.use(cors({
     return callback(null, true);
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Set-Cookie']  // Add this
 }));
 
 // Handle preflight requests
 app.options("*", cors({
-  origin: "https://vendor-frontend-omega.vercel.app",
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error('Not allowed by CORS'), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
 }));
 
@@ -65,4 +73,4 @@ app.get("/api/test", (req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));  // ✅ Fixed template literal
