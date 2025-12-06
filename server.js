@@ -1,6 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
-import cors from "cors";  // ✅ ONLY import, no require
+import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.js";
@@ -12,26 +12,27 @@ const app = express();
 
 app.set("trust proxy", 1);
 
-const allowedOrigins = [
-  'https://vendor-frontend-omega.vercel.app',
-  'http://localhost:3000',
-  'http://localhost:5173'
-];
-
-// CORS MUST be before routes
-app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error('Not allowed by CORS'), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['Set-Cookie']
-}));
+// SIMPLIFIED CORS - Just allow everything for now to test
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  if (origin === 'https://vendor-frontend-omega.vercel.app' || 
+      origin === 'http://localhost:3000' || 
+      origin === 'http://localhost:5173') {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Expose-Headers', 'Set-Cookie');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  
+  next();
+});
 
 app.use(express.json());
 app.use(cookieParser());
@@ -44,6 +45,10 @@ mongoose
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/data", dataRoutes);
+
+app.get("/api/test", (req, res) => {
+  res.json({ message: "Backend is working!" });
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
