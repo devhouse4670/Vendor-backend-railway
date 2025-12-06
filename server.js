@@ -13,8 +13,10 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: ["https://vendor-frontend-omega.vercel.app"],
+  origin: "https://vendor-frontend-omega.vercel.app",  // EXACT frontend URL
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],  // allow your methods
+  allowedHeaders: ["Content-Type", "Authorization"],     // headers you use
 }));
 app.use(express.json());
 
