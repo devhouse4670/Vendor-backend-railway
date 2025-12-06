@@ -41,12 +41,13 @@ router.post("/login", async (req, res) => {
 
     res.cookie("token", token, {
   httpOnly: true,
-  secure: true,       // required on Vercel/HTTPS
-  sameSite: "None",   // required for cross-origin cookies
-  maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
+  secure: true,      // must be true in production with HTTPS
+  sameSite: "none",  // cross-origin cookies
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 });
 
-res.json({ message: "Login successful", user });
+res.json({ user, token });
+
 
     
   } catch {
