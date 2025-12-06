@@ -39,7 +39,16 @@ router.post("/login", async (req, res) => {
       expiresIn: "7d"
     });
 
-    res.json({ message: "Login successful", token, user });
+    res.cookie("token", token, {
+  httpOnly: true,
+  secure: true,       // required on Vercel/HTTPS
+  sameSite: "None",   // required for cross-origin cookies
+  maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
+});
+
+res.json({ message: "Login successful", user });
+
+    
   } catch {
     res.status(500).json({ error: "Login failed" });
   }
