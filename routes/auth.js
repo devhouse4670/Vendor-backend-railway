@@ -9,8 +9,7 @@ const router = express.Router();
 router.post("/register", async (req, res) => {
   try {
     // Add CORS headers
-    res.setHeader('Access-Control-Allow-Origin', 'https://vendor-frontend-omega.vercel.app');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
 
     const { name, email, password } = req.body;
     const userExists = await User.findOne({ email });
