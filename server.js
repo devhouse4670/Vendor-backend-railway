@@ -16,6 +16,13 @@ app.use(cors({
   origin: "https://vendor-frontend-omega.vercel.app",
   credentials: true,
 }));
+
+app.options("*", cors({
+  origin: "https://vendor-frontend-omega.vercel.app",
+  credentials: true,
+}));
+
+
 app.use(express.json());
 
 // Database
