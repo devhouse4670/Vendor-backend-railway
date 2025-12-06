@@ -11,26 +11,41 @@ dotenv.config();
 const app = express();
 app.set("trust proxy", 1);
 
-// CORS Configuration
-const corsOptions = {
-  origin: [
-    'https://vendor-frontend-omega.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:5173'
-  ],
+// Middleware - ORDER IS CRITICAL
+// 1. CORS FIRST
+app.use(cors({
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'https://vendor-frontend-omega.vercel.app',
+      'http://localhost:3000',
+      'http://localhost:5173'
+    ];
+    
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   exposedHeaders: ['Content-Length', 'X-JSON'],
-  maxAge: 86400,
-  optionsSuccessStatus: 200
-};
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+}));
 
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+// 2. Handle preflight requests explicitly
+app.options('*', cors());
+
+// 3. Body parser
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Root Route (put this BEFORE other routes for priority)
+// Root Route
 app.get("/", (req, res) => {
   res.json({ 
     message: "Vendor Backend API", 
@@ -47,7 +62,11 @@ app.get("/", (req, res) => {
 
 // Test Route
 app.get("/api/test", (req, res) => {
-  res.json({ message: "Backend is working!", timestamp: new Date() });
+  res.json({ 
+    message: "Backend is working!", 
+    timestamp: new Date(),
+    cors: "enabled" 
+  });
 });
 
 // MongoDB Connection
@@ -55,11 +74,11 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Connected to MongoDB Atlas"))
   .catch(err => {
-    console.log("❌ MongoDB Error:", err);
-    process.exit(1); // Exit if can't connect to DB
+    console.error("❌ MongoDB Error:", err);
+    process.exit(1);
   });
 
-// Routes
+// API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/data", dataRoutes);
@@ -72,12 +91,16 @@ app.use((req, res) => {
 // Error Handler
 app.use((err, req, res, next) => {
   console.error("Error:", err);
-  res.status(500).json({ error: "Internal server error" });
+  res.status(500).json({ 
+    error: "Internal server error",
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
 });
 
-// CRITICAL: Listen on 0.0.0.0 for Railway
+// Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🌐 CORS enabled for allowed origins`);
 });
