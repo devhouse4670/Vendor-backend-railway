@@ -8,10 +8,13 @@ const router = express.Router();
 // REGISTER
 router.post("/register", async (req, res) => {
   try {
-    // Add CORS headers
-
-
     const { name, email, password } = req.body;
+    
+    // Validate input
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
     const userExists = await User.findOne({ email });
     
     if (userExists) {
@@ -28,12 +31,13 @@ router.post("/register", async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
+      secure: process.env.NODE_ENV === 'production', // Auto secure in production
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
     });
 
     res.json({ 
+      success: true,
       message: "User registered successfully",
       token,
       user: {
@@ -44,18 +48,23 @@ router.post("/register", async (req, res) => {
     });
   } catch (err) {
     console.error('Registration error:', err);
-    res.status(500).json({ error: "Registration failed" });
+    res.status(500).json({ 
+      error: "Registration failed",
+      message: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 
 // LOGIN
 router.post("/login", async (req, res) => {
   try {
-    // Add CORS headers explicitly
-    res.setHeader('Access-Control-Allow-Origin', 'https://vendor-frontend-omega.vercel.app');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-
+    // REMOVED: Manual CORS headers - let middleware handle it
     const { email, password } = req.body;
+    
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
     
     const user = await User.findOne({ email });
     if (!user) {
@@ -74,14 +83,15 @@ router.post("/login", async (req, res) => {
     // Set cookie with proper settings
     res.cookie('token', token, {
       httpOnly: true,
-      secure: true,      // Must be true for HTTPS
-      sameSite: 'none',  // Must be 'none' for cross-origin
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
     });
 
     // Send response with user data
     res.json({ 
       success: true,
+      message: "Login successful",
       token,
       user: {
         id: user._id,
@@ -92,7 +102,46 @@ router.post("/login", async (req, res) => {
     
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ error: "Login failed" });
+    res.status(500).json({ 
+      error: "Login failed",
+      message: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+});
+
+// LOGOUT (optional but useful)
+router.post("/logout", (req, res) => {
+  res.clearCookie('token');
+  res.json({ success: true, message: "Logged out successfully" });
+});
+
+// VERIFY TOKEN (optional but useful)
+router.get("/verify", async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    
+    if (!token) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ 
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      }
+    });
+  } catch (err) {
+    console.error('Verification error:', err);
+    res.status(401).json({ error: "Invalid token" });
   }
 });
 
