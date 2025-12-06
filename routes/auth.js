@@ -39,14 +39,15 @@ router.post("/login", async (req, res) => {
       expiresIn: "7d"
     });
 
-    res.cookie("token", token, {
+   // When sending the login response
+res.cookie('token', token, {
   httpOnly: true,
-  secure: true,      // must be true in production with HTTPS
-  sameSite: "none",  // cross-origin cookies
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  secure: true,      // Must be true for HTTPS
+  sameSite: 'none',  // Must be 'none' for cross-origin
+  maxAge: 24 * 60 * 60 * 1000  // 1 day
 });
 
-res.json({ user, token });
+res.json({ success: true, user: userData });
 
 
     
