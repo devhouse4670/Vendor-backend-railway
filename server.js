@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/userRoutes.js";
 import dataRoutes from "./routes/data.js";
@@ -11,22 +12,26 @@ dotenv.config();
 const app = express();
 app.set("trust proxy", 1);
 
-// Middleware - ORDER IS CRITICAL
-// 1. CORS FIRST
-app.use(cors({
+// CORS Configuration - ADD YOUR GODADDY DOMAIN
+const allowedOrigins = [
+  'https://winexch.blog',           // ✅ ADD THIS - Your GoDaddy domain
+  'http://winexch.blog',            // ✅ ADD THIS - HTTP version
+  'https://www.winexch.blog',       // ✅ ADD THIS - WWW version
+  'http://www.winexch.blog',        // ✅ ADD THIS - WWW HTTP version
+  'https://vendor-frontend-omega.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173'
+];
+
+const corsOptions = {
   origin: function (origin, callback) {
-    const allowedOrigins = [
-      'https://vendor-frontend-omega.vercel.app',
-      'http://localhost:3000',
-      'http://localhost:5173'
-    ];
-    
-    // Allow requests with no origin (like mobile apps or Postman)
+    // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.log('Blocked origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -34,16 +39,16 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   exposedHeaders: ['Content-Length', 'X-JSON'],
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-}));
+  maxAge: 86400,
+  optionsSuccessStatus: 200
+};
 
-// 2. Handle preflight requests explicitly
-app.options('*', cors());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
-// 3. Body parser
+// Body parser and cookie parser
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Root Route
 app.get("/", (req, res) => {
@@ -51,6 +56,7 @@ app.get("/", (req, res) => {
     message: "Vendor Backend API", 
     status: "Running",
     version: "1.0.0",
+    allowedOrigins: allowedOrigins,
     endpoints: {
       auth: "/api/auth",
       users: "/api/users",
@@ -65,7 +71,7 @@ app.get("/api/test", (req, res) => {
   res.json({ 
     message: "Backend is working!", 
     timestamp: new Date(),
-    cors: "enabled" 
+    cors: "enabled"
   });
 });
 
@@ -75,32 +81,35 @@ mongoose
   .then(() => console.log("✅ Connected to MongoDB Atlas"))
   .catch(err => {
     console.error("❌ MongoDB Error:", err);
-    process.exit(1);
   });
 
-// API Routes
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/data", dataRoutes);
 
 // 404 Handler
 app.use((req, res) => {
-  res.status(404).json({ error: "Route not found" });
+  res.status(404).json({ 
+    error: "Route not found",
+    path: req.path,
+    method: req.method
+  });
 });
 
 // Error Handler
 app.use((err, req, res, next) => {
   console.error("Error:", err);
   res.status(500).json({ 
-    error: "Internal server error",
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+    error: "Internal server error", 
+    message: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message 
   });
 });
 
-// Start Server
+// Listen on 0.0.0.0 for Railway
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 CORS enabled for allowed origins`);
+  console.log(`🔒 CORS enabled for: ${allowedOrigins.join(', ')}`);
 });
