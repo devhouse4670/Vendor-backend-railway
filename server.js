@@ -7,6 +7,7 @@ import userRoutes from "./routes/userRoutes.js";
 import dataRoutes from "./routes/data.js";
 
 dotenv.config();
+console.log("Auth routes loaded");
 
 const app = express();
 app.set("trust proxy", 1);
