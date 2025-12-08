@@ -2,7 +2,6 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
-import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/userRoutes.js";
 import dataRoutes from "./routes/data.js";
@@ -56,7 +55,6 @@ app.options('*', cors(corsOptions));
 
 // Body parser and cookie parser
 app.use(express.json());
-app.use(cookieParser());
 
 // Root Route
 app.get("/", (req, res) => {
