@@ -25,10 +25,19 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    // Allow exact matches
+    const allowedDomains = [
+      'https://winexch.blog',
+      'http://winexch.blog',
+      'https://vendor-frontend-omega.vercel.app',
+      'http://localhost:3000',
+      'http://localhost:5173'
+    ];
+    
+    // Check if origin matches or is subdomain of winexch.blog
+    if (allowedDomains.includes(origin) || origin.endsWith('.winexch.blog')) {
       callback(null, true);
     } else {
       console.log('Blocked origin:', origin);
@@ -38,7 +47,6 @@ const corsOptions = {
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['Content-Length', 'X-JSON'],
   maxAge: 86400,
   optionsSuccessStatus: 200
 };
