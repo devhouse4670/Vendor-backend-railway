@@ -3,29 +3,6 @@ import Campaign from '../models/Campaign.js';
 
 const router = express.Router();
 
-// // GET all campaigns for a specific vendor
-// router.get('/vendor/:vendorId', async (req, res) => {
-//   try {
-//     const campaigns = await Campaign.find({ vendorId: req.params.vendorId });
-//     res.json(campaigns);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// });
-
-// // GET single campaign by ID
-// router.get('/:id', async (req, res) => {
-//   try {
-//     const campaign = await Campaign.findById(req.params.id);
-//     if (!campaign) {
-//       return res.status(404).json({ message: 'Campaign not found' });
-//     }
-//     res.json(campaign);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// });
-
 router.get('/vendor/:vendorId', async (req, res) => {
   try {
     const campaigns = await Campaign.find({ vendorId: req.params.vendorId });
