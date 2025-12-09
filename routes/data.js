@@ -7,7 +7,7 @@ const router = express.Router();
 // ==================== VENDOR ROUTES ====================
 
 // GET all vendors
-router.get("/vendors", async (req, res) => {
+router.get("/vendors/:id", async (req, res) => {
   try {
     const vendors = await Vendor.find().sort({ date: -1 });
     res.json(vendors);
