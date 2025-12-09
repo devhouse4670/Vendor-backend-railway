@@ -6,49 +6,68 @@ const router = express.Router();
 
 /* ==================== VENDOR ROUTES ==================== */
 
-// 1. GET vendors by user ID (MUST be first among the GETs with parameters)
-router.get("/vendors/user/:userId", async (req, res) => {
-  try {
-    const vendors = await Vendor.find({ userId: req.params.userId }).sort({ date: -1 });
-    res.json(vendors);
-  } catch (error) {
-    console.error('Error fetching vendors by user:', error);
-    res.status(500).json({ message: error.message });
-  }
-});
+// // 1. GET vendors by user ID (MUST be first among the GETs with parameters)
+// router.get("/vendors/user/:userId", async (req, res) => {
+//   try {
+//     const vendors = await Vendor.find({ userId: req.params.userId }).sort({ date: -1 });
+//     res.json(vendors);
+//   } catch (error) {
+//     console.error('Error fetching vendors by user:', error);
+//     res.status(500).json({ message: error.message });
+//   }
+// });
 
-// 2. GET vendor by vendorId or MongoDB ID (Generic parameter :vendorId or :id)
-router.get("/vendors/:vendorId", async (req, res) => {
-  try {
-    const { vendorId } = req.params;
+// // 2. GET vendor by vendorId or MongoDB ID (Generic parameter :vendorId or :id)
+// router.get("/vendors/:vendorId", async (req, res) => {
+//   try {
+//     const { vendorId } = req.params;
     
-    // Try to find by vendorId field first (for strings like VEND-1218)
-    let vendor = await Vendor.findOne({ vendorId: vendorId });
+//     // Try to find by vendorId field first (for strings like VEND-1218)
+//     let vendor = await Vendor.findOne({ vendorId: vendorId });
     
-    // If not found and it looks like a MongoDB ObjectId, try findById
-    if (!vendor && vendorId.match(/^[0-9a-fA-F]{24}$/)) {
-      vendor = await Vendor.findById(vendorId);
-    }
+//     // If not found and it looks like a MongoDB ObjectId, try findById
+//     if (!vendor && vendorId.match(/^[0-9a-fA-F]{24}$/)) {
+//       vendor = await Vendor.findById(vendorId);
+//     }
     
-    if (!vendor) {
-      return res.status(404).json({ message: 'Vendor not found' });
-    }
+//     if (!vendor) {
+//       return res.status(404).json({ message: 'Vendor not found' });
+//     }
     
-    res.json(vendor);
-  } catch (error) {
-    console.error('Error fetching specific vendor:', error);
-    res.status(500).json({ message: error.message });
-  }
-});
+//     res.json(vendor);
+//   } catch (error) {
+//     console.error('Error fetching specific vendor:', error);
+//     res.status(500).json({ message: error.message });
+//   }
+// });
 
-// 3. GET all vendors (No parameters, placed last in GETs)
-router.get("/vendors", async (req, res) => {
+// // 3. GET all vendors (No parameters, placed last in GETs)
+// router.get("/vendors", async (req, res) => {
+//   try {
+//     const vendors = await Vendor.find();
+//     res.json(vendors);
+//   } catch (err) {
+//     console.error('Error fetching all vendors:', err);
+//     res.status(500).json({ error: "Failed to fetch vendors" });
+//   }
+// });
+
+// TEMPORARY TEST ROUTE FOR DEBUGGING 500 ERROR
+router.get("/campaigns/vendor/:vendorId", async (req, res) => {
   try {
-    const vendors = await Vendor.find();
-    res.json(vendors);
-  } catch (err) {
-    console.error('Error fetching all vendors:', err);
-    res.status(500).json({ error: "Failed to fetch vendors" });
+    // 🛑 BYPASS DATABASE QUERY
+    // const campaigns = await Campaign.find({ vendorId: req.params.vendorId }); 
+    
+    // Return a hardcoded success response
+    res.json([{ 
+        campaignName: "SUCCESSFUL TEST CAMPAIGN", 
+        vendorId: req.params.vendorId, 
+        platform: "TestPlatform"
+    }]);
+
+  } catch (error) {
+    console.error('Error fetching campaigns (TEST ROUTE):', error);
+    res.status(500).json({ message: error.message });
   }
 });
 
