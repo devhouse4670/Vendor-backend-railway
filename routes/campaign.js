@@ -42,7 +42,8 @@ router.get('/user/:userId', async (req, res) => {
         const campaigns = await Campaign.find({ userId: req.params.userId });
         res.json(campaigns);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        // Use 500 status for server/db errors
+        res.status(500).json({ message: error.message }); 
     }
 });
 
