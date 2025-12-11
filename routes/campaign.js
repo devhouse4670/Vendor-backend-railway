@@ -2,6 +2,7 @@ import express from 'express';
 import Campaign from '../models/Campaign.js'; // Adjust path to your Campaign model
 const router = express.Router();
 
+<<<<<<< HEAD
 // Get campaigns by user ID
 router.get('/campaigns/user/:userId', async (req, res) => {
   try {
@@ -44,6 +45,20 @@ router.get('/campaigns/vendor/:vendorId', async (req, res) => {
 
 
 // Get single campaign by ID
+=======
+// Get all campaigns
+router.get('/campaigns', async (req, res) => {
+  try {
+    const campaigns = await Campaign.find().sort({ createdAt: -1 });
+    res.json({ success: true, count: campaigns.length, campaigns });
+  } catch (error) {
+    console.error('Error fetching campaigns:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get campaign by ID
+>>>>>>> a92a8c52c363d84363602c48153d8d524195a9a0
 router.get('/campaigns/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -53,6 +68,7 @@ router.get('/campaigns/:id', async (req, res) => {
     const campaign = await Campaign.findById(id);
     
     if (!campaign) {
+<<<<<<< HEAD
       return res.status(404).json({
         success: false,
         error: 'Campaign not found'
@@ -157,12 +173,72 @@ router.put('/campaigns/:id', async (req, res) => {
       error: 'Failed to update campaign',
       message: error.message
     });
+=======
+      return res.status(404).json({ success: false, error: 'Campaign not found' });
+    }
+    res.json({ success: true, campaign });
+  } catch (error) {
+    console.error('Error fetching campaign:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get campaigns by user ID
+router.get('/campaigns/user/:userId', async (req, res) => {
+  try {
+    const campaigns = await Campaign.find({ userId: req.params.userId }).sort({ createdAt: -1 });
+    res.json({ success: true, count: campaigns.length, campaigns });
+  } catch (error) {
+    console.error('Error fetching user campaigns:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get campaigns by vendor ID
+router.get('/campaigns/vendor/:vendorId', async (req, res) => {
+  try {
+    const campaigns = await Campaign.find({ vendorId: req.params.vendorId }).sort({ createdAt: -1 });
+    res.json({ success: true, count: campaigns.length, campaigns });
+  } catch (error) {
+    console.error('Error fetching vendor campaigns:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Create a new campaign
+router.post('/campaigns', async (req, res) => {
+  try {
+    const campaign = new Campaign(req.body);
+    await campaign.save();
+    res.status(201).json({ success: true, campaign });
+  } catch (error) {
+    console.error('Error creating campaign:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Update campaign
+router.put('/campaigns/:id', async (req, res) => {
+  try {
+    const updated = await Campaign.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    });
+    if (!updated) {
+      return res.status(404).json({ success: false, error: 'Campaign not found' });
+    }
+    res.json({ success: true, campaign: updated });
+  } catch (error) {
+    console.error('Error updating campaign:', error);
+    res.status(500).json({ success: false, error: error.message });
+>>>>>>> a92a8c52c363d84363602c48153d8d524195a9a0
   }
 });
 
 // Delete campaign
 router.delete('/campaigns/:id', async (req, res) => {
   try {
+<<<<<<< HEAD
     const { id } = req.params;
     
     console.log('🗑️ Deleting campaign:', id);
@@ -188,6 +264,16 @@ router.delete('/campaigns/:id', async (req, res) => {
       error: 'Failed to delete campaign',
       message: error.message
     });
+=======
+    const deleted = await Campaign.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, error: 'Campaign not found' });
+    }
+    res.json({ success: true, message: 'Campaign deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting campaign:', error);
+    res.status(500).json({ success: false, error: error.message });
+>>>>>>> a92a8c52c363d84363602c48153d8d524195a9a0
   }
 });
 

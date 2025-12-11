@@ -2,6 +2,7 @@
   "version": 2,
   "builds": [
     {
+<<<<<<< HEAD
       "src": "api/**/*.js",
       "use": "@vercel/node"
     },
@@ -11,10 +12,15 @@
       "config": {
         "distDir": "dist"
       }
+=======
+      "src": "server.js",
+      "use": "@vercel/node"
+>>>>>>> a92a8c52c363d84363602c48153d8d524195a9a0
     }
   ],
   "routes": [
     {
+<<<<<<< HEAD
       "src": "/api/(.*)",
       "dest": "/api/$1"
     },
@@ -24,3 +30,10 @@
     }
   ]
 }
+=======
+      "src": "/(.*)",
+      "dest": "/server.js"
+    }
+  ]
+}
+>>>>>>> a92a8c52c363d84363602c48153d8d524195a9a0
