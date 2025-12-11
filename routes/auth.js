@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import Vendor from "../models/Vendor.js";
 
 const router = express.Router();
 
@@ -15,11 +16,24 @@ router.post("/register", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = new User({ name, email, password: hashedPassword });
-    await user.save();
+    const newUser = new User({ name, email, password: hashedPassword });
+    await newUser.save();
 
-    res.json({ message: "User registered successfully" });
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d"
+    });
+
+    res.status(201).json({
+      message: "User registered successfully",
+      token,
+      user: {
+        _id: newUser._id,
+        name: newUser.name,
+        email: newUser.email
+      }
+    });
   } catch (err) {
+    console.error("Register error:", err);
     res.status(500).json({ error: "Registration failed" });
   }
 });
@@ -39,12 +53,21 @@ router.post("/login", async (req, res) => {
       expiresIn: "7d"
     });
 
-    res.json({ message: "Login successful", token, user });
-  } catch {
+    res.json({
+      message: "Login successful",
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email
+      }
+    });
+
+  } catch (err) {
+    console.error("Login error:", err);
     res.status(500).json({ error: "Login failed" });
   }
 });
-
 
 // GET vendors by user ID
 router.get('/vendors/user/:userId', async (req, res) => {

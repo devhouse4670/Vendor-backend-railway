@@ -4,24 +4,52 @@ import Vendor from "../models/Vendor.js";
 const router = express.Router();
 
 // GET all vendors
-router.get("/", async (req, res) => {
+// GET vendor by vendorId
+router.get("/:vendorId", async (req, res) => {
   try {
-    const vendors = await Vendor.find();
-    res.json(vendors);
+    const vendor = await Vendor.findOne({ vendorId: req.params.vendorId });
+
+    if (!vendor) {
+      return res.status(404).json({ success: false, message: "Vendor not found" });
+    }
+
+    res.json({ success: true, vendor });
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch vendors" });
+    res.status(500).json({ success: false, error: "Failed to fetch vendor" });
   }
 });
 
-// GET vendor by ID
+
+
+// GET vendor by ID (final correct version)
 router.get("/:id", async (req, res) => {
   try {
-const vendor = await Vendor.findOne({ vendorId: req.params.id });
-    res.json(vendor);
+    const vendor = await Vendor.findOne({ vendorId: req.params.id });
+
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor not found"
+      });
+    }
+
+    // Return vendor SAME WAY your frontend expects
+    return res.json({
+      success: true,
+      vendor: vendor,
+      message: "Vendor fetched successfully"
+    });
+
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch vendor" });
+    return res.status(500).json({
+      success: false,
+      error: "Failed to fetch vendor",
+      details: err.message
+    });
   }
 });
+
+
 
 // POST new vendor
 router.post("/", async (req, res) => {
@@ -54,5 +82,31 @@ router.get('/vendors/user/:userId', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+
+router.get("/:id", async (req, res) => {
+  try {
+    const vendor = await Vendor.findOne({ vendorId: req.params.id });
+
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      vendor, // wrap it inside "vendor"
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch vendor",
+      error: err.message,
+    });
+  }
+});
+
 
 export default router;

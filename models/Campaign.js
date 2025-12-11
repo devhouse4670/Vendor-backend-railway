@@ -1,34 +1,26 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const campaignSchema = new mongoose.Schema({
-  campaignId: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  vendorId: {
-    type: String,
-    required: true
-  },
-  campaignName: {
-    type: String,
-    required: true
-  },
-  brand: String,
+  campaignId: { type: String, required: true, unique: true },
+  campaignName: { type: String, required: true },
+  userId: { type: String, required: true },
+  vendorId: { type: String, required: true },
   platform: String,
+  brand: String,
+  handler: String,
+  kpi: String,
+  kpiAchieved: { type: String, default: 'no' },
+  btag: String,
+  btagLogin: String,
+  btagPassword: String,
   budget: Number,
   duration: String,
   startDate: Date,
   endDate: Date,
-  handler: String,
-  kpi: String,
-  kpiAchieved: String,
-  btag: String,
-  btagLogin: String,
-  btagPassword: String,
   bankDetails: String,
   msg: String,
   extra: String,
+  status: { type: String, default: 'Active' },
   payments: [{
     date: String,
     amount: Number
@@ -41,6 +33,6 @@ const campaignSchema = new mongoose.Schema({
   timestamps: true
 });
 
-campaignSchema.index({ vendorId: 1 });
+const Campaign = mongoose.model('Campaign', campaignSchema);
 
-export default mongoose.model('Campaign', campaignSchema);
+export default Campaign;

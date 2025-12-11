@@ -2,41 +2,81 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
-import dataRoutes from "./routes/data.js";
-import vendorRoutes from "./routes/vendors.js";
-import campaignRoutes from "./routes/campaign.js";
-import userRoutes from "./routes/userRoutes.js";
-import Campaign from "./models/Campaign.js";
 import authRoutes from "./routes/auth.js";
+import userRoutes from "./routes/userRoutes.js";
+import dataRoutes from "./routes/data.js";
 
 dotenv.config();
+console.log("Auth routes loaded");
 
 const app = express();
-app.use(cors());
+app.set("trust proxy", 1);
+
+// CORS Configuration
+const corsOptions = {
+  origin: [
+     'https://winexch.blog',             // Your frontend
+    'https://vendor-backend-railway.onrender.com', // your backend for preflight
+    'http://localhost:3000',
+    'http://localhost:5000'
+    
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'X-JSON'],
+  maxAge: 86400,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json());
 
+// Root Route (put this BEFORE other routes for priority)
+app.get("/", (req, res) => {
+  res.json({ 
+    message: "Vendor Backend API", 
+    status: "Running",
+    version: "1.0.0",
+    endpoints: {
+      auth: "/api/auth",
+      users: "/api/users",
+      data: "/api/data",
+      test: "/api/test"
+    }
+  });
+});
+
+// Test Route
+app.get("/api/test", (req, res) => {
+  res.json({ message: "Backend is working!", timestamp: new Date() });
+});
+
+// MongoDB Connection
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Connected to MongoDB Atlas"))
   .catch(err => console.log("❌ MongoDB Error:", err));
 
-app.use("/api/data", dataRoutes);
-app.use("/api/vendors", vendorRoutes);  // ⬅ IMPORTANT FIX
-
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () =>
-  console.log(`🚀 Server running on http://localhost:${PORT}`)
-);
-
-app.use("/api/campaigns", campaignRoutes);
-
-
-app.use("/api/users", userRoutes);
-
-
+// Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/data", dataRoutes);
 
+// 404 Handler
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
 
+// Error Handler
+app.use((err, req, res, next) => {
+  console.error("Error:", err);
+  res.status(500).json({ error: "Internal server error" });
+});
 
-app.use('/api/data/vendors', vendorRoutes);
-
+// CRITICAL: Listen on 0.0.0.0 for Railway
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+});
