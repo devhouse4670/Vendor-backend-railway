@@ -23,7 +23,9 @@ const campaignSchema = new mongoose.Schema({
   status: { type: String, default: 'Active' },
   payments: [{
     date: String,
-    amount: Number
+    amount: Number,
+          utr: { type: String }   // <-- THIS MUST EXIST
+
   }],
   campaignLinks: [{
     heading: String,
