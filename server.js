@@ -15,9 +15,9 @@ app.set("trust proxy", 1);
 // CORS Configuration
 const corsOptions = {
   origin: [
-     'https://winexch.blog',    
-     'https://vrm.winexch.blog',         // Your frontend
-    'https://vendor-backend-railway.onrender.com', // your backend for preflight
+    'https://winexch.blog',    
+    'https://vrm.winexch.blog',      
+    'https://vendor-backend-railway.onrender.com', 
     'http://localhost:3000',
     'http://localhost:5000'
     
