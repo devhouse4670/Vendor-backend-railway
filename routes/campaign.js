@@ -1,94 +1,6 @@
 import express from 'express';
-import Campaign from '../models/Campaign.js'; // Adjust path to your Campaign model
+import Campaign from '../models/Campaign.js';
 const router = express.Router();
-
-<<<<<<< HEAD
-// Get campaigns by user ID
-router.get('/campaigns/user/:userId', async (req, res) => {
-  try {
-    const { userId } = req.params;
-    
-    console.log('📊 Fetching campaigns for user:', userId);
-    
-    // Find all campaigns where the user is the creator/owner
-    const campaigns = await Campaign.find({ 
-      userId: userId  // or createdBy, ownerId - whatever field you use
-    }).sort({ createdAt: -1 }); // Sort by newest first
-    
-    console.log(`✅ Found ${campaigns.length} campaigns`);
-    
-    res.json({
-      success: true,
-      count: campaigns.length,
-      campaigns
-    });
-    
-  } catch (error) {
-    console.error('❌ Error fetching user campaigns:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch campaigns',
-      message: error.message
-    });
-  }
-});
-
-
-
-
-// Get campaigns by vendor ID
-router.get('/campaigns/vendor/:vendorId', async (req, res) => {
-  const { vendorId } = req.params;
-  const campaigns = await Campaign.find({ vendorId });
-  res.json({ success: true, campaigns });
-});
-
-
-// Get single campaign by ID
-=======
-// Get all campaigns
-router.get('/campaigns', async (req, res) => {
-  try {
-    const campaigns = await Campaign.find().sort({ createdAt: -1 });
-    res.json({ success: true, count: campaigns.length, campaigns });
-  } catch (error) {
-    console.error('Error fetching campaigns:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Get campaign by ID
->>>>>>> a92a8c52c363d84363602c48153d8d524195a9a0
-router.get('/campaigns/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    console.log('📊 Fetching campaign:', id);
-    
-    const campaign = await Campaign.findById(id);
-    
-    if (!campaign) {
-<<<<<<< HEAD
-      return res.status(404).json({
-        success: false,
-        error: 'Campaign not found'
-      });
-    }
-    
-    res.json({
-      success: true,
-      campaign
-    });
-    
-  } catch (error) {
-    console.error('❌ Error fetching campaign:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch campaign',
-      message: error.message
-    });
-  }
-});
 
 // Get all campaigns
 router.get('/campaigns', async (req, res) => {
@@ -113,15 +25,120 @@ router.get('/campaigns', async (req, res) => {
   }
 });
 
+// Get campaigns by user ID
+router.get('/campaigns/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    console.log('📊 Fetching campaigns for user:', userId);
+    
+    const campaigns = await Campaign.find({ 
+      userId: userId
+    }).sort({ createdAt: -1 });
+    
+    console.log(`✅ Found ${campaigns.length} campaigns`);
+    
+    res.json({
+      success: true,
+      count: campaigns.length,
+      campaigns
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching user campaigns:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch campaigns',
+      message: error.message
+    });
+  }
+});
+
+// Get campaigns by vendor ID
+router.get('/campaigns/vendor/:vendorId', async (req, res) => {
+  try {
+    const { vendorId } = req.params;
+    
+    console.log('📊 Fetching campaigns for vendor:', vendorId);
+    
+    const campaigns = await Campaign.find({ 
+      vendorId: vendorId 
+    }).sort({ createdAt: -1 });
+    
+    console.log(`✅ Found ${campaigns.length} campaigns for vendor`);
+    
+    res.json({ 
+      success: true, 
+      count: campaigns.length,
+      campaigns 
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching vendor campaigns:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch vendor campaigns',
+      message: error.message
+    });
+  }
+});
+
+// Get single campaign by ID
+router.get('/campaigns/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log('📊 Fetching campaign:', id);
+    
+    const campaign = await Campaign.findById(id);
+    
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        error: 'Campaign not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      campaign
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching campaign:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch campaign',
+      message: error.message
+    });
+  }
+});
+
 // Create new campaign
 router.post('/campaigns', async (req, res) => {
   try {
     const campaignData = req.body;
     
-    console.log('📝 Creating new campaign:', campaignData);
+    console.log('📝 Creating new campaign');
+    console.log('Campaign data received:', JSON.stringify(campaignData, null, 2));
     
+    // Log payments specifically to debug
+    if (campaignData.payments) {
+      console.log('💰 Payments data:', JSON.stringify(campaignData.payments, null, 2));
+      console.log('Number of payments:', campaignData.payments.length);
+    }
+    
+    // Create the campaign
     const campaign = new Campaign(campaignData);
+    
+    // Log before saving
+    console.log('Campaign object before save:', JSON.stringify(campaign.toObject(), null, 2));
+    
     await campaign.save();
+    
+    // Log after saving
+    console.log('✅ Campaign saved successfully');
+    console.log('Saved campaign payments:', JSON.stringify(campaign.payments, null, 2));
     
     res.status(201).json({
       success: true,
@@ -131,6 +148,10 @@ router.post('/campaigns', async (req, res) => {
     
   } catch (error) {
     console.error('❌ Error creating campaign:', error);
+    console.error('Error details:', error.message);
+    if (error.errors) {
+      console.error('Validation errors:', error.errors);
+    }
     res.status(500).json({
       success: false,
       error: 'Failed to create campaign',
@@ -139,6 +160,7 @@ router.post('/campaigns', async (req, res) => {
   }
 });
 
+
 // Update campaign
 router.put('/campaigns/:id', async (req, res) => {
   try {
@@ -146,6 +168,12 @@ router.put('/campaigns/:id', async (req, res) => {
     const updates = req.body;
     
     console.log('✏️ Updating campaign:', id);
+    console.log('Update data:', JSON.stringify(updates, null, 2));
+    
+    // Log payments if being updated
+    if (updates.payments) {
+      console.log('💰 Updating payments:', JSON.stringify(updates.payments, null, 2));
+    }
     
     const campaign = await Campaign.findByIdAndUpdate(
       id,
@@ -160,6 +188,9 @@ router.put('/campaigns/:id', async (req, res) => {
       });
     }
     
+    console.log('✅ Campaign updated successfully');
+    console.log('Updated campaign payments:', JSON.stringify(campaign.payments, null, 2));
+    
     res.json({
       success: true,
       message: 'Campaign updated successfully',
@@ -173,72 +204,12 @@ router.put('/campaigns/:id', async (req, res) => {
       error: 'Failed to update campaign',
       message: error.message
     });
-=======
-      return res.status(404).json({ success: false, error: 'Campaign not found' });
-    }
-    res.json({ success: true, campaign });
-  } catch (error) {
-    console.error('Error fetching campaign:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Get campaigns by user ID
-router.get('/campaigns/user/:userId', async (req, res) => {
-  try {
-    const campaigns = await Campaign.find({ userId: req.params.userId }).sort({ createdAt: -1 });
-    res.json({ success: true, count: campaigns.length, campaigns });
-  } catch (error) {
-    console.error('Error fetching user campaigns:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Get campaigns by vendor ID
-router.get('/campaigns/vendor/:vendorId', async (req, res) => {
-  try {
-    const campaigns = await Campaign.find({ vendorId: req.params.vendorId }).sort({ createdAt: -1 });
-    res.json({ success: true, count: campaigns.length, campaigns });
-  } catch (error) {
-    console.error('Error fetching vendor campaigns:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Create a new campaign
-router.post('/campaigns', async (req, res) => {
-  try {
-    const campaign = new Campaign(req.body);
-    await campaign.save();
-    res.status(201).json({ success: true, campaign });
-  } catch (error) {
-    console.error('Error creating campaign:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Update campaign
-router.put('/campaigns/:id', async (req, res) => {
-  try {
-    const updated = await Campaign.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    });
-    if (!updated) {
-      return res.status(404).json({ success: false, error: 'Campaign not found' });
-    }
-    res.json({ success: true, campaign: updated });
-  } catch (error) {
-    console.error('Error updating campaign:', error);
-    res.status(500).json({ success: false, error: error.message });
->>>>>>> a92a8c52c363d84363602c48153d8d524195a9a0
   }
 });
 
 // Delete campaign
 router.delete('/campaigns/:id', async (req, res) => {
   try {
-<<<<<<< HEAD
     const { id } = req.params;
     
     console.log('🗑️ Deleting campaign:', id);
@@ -252,6 +223,8 @@ router.delete('/campaigns/:id', async (req, res) => {
       });
     }
     
+    console.log('✅ Campaign deleted successfully');
+    
     res.json({
       success: true,
       message: 'Campaign deleted successfully'
@@ -264,16 +237,22 @@ router.delete('/campaigns/:id', async (req, res) => {
       error: 'Failed to delete campaign',
       message: error.message
     });
-=======
-    const deleted = await Campaign.findByIdAndDelete(req.params.id);
-    if (!deleted) {
-      return res.status(404).json({ success: false, error: 'Campaign not found' });
-    }
-    res.json({ success: true, message: 'Campaign deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting campaign:', error);
-    res.status(500).json({ success: false, error: error.message });
->>>>>>> a92a8c52c363d84363602c48153d8d524195a9a0
+  }
+});
+
+
+router.get("/vendor/:vendorId", async (req, res) => {
+  try {
+    const { vendorId } = req.params;
+    const campaigns = await Campaign.find({ vendorId });
+
+    res.json({
+      success: true,
+      count: campaigns.length,
+      campaigns
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

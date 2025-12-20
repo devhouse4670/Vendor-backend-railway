@@ -1,50 +1,32 @@
 import express from "express";
 import Vendor from "../models/Vendor.js";
-<<<<<<< HEAD
 import Campaign from '../models/Campaign.js';
 
 const router = express.Router();
 
 /* ==================== VENDOR ROUTES ==================== */
-=======
-import Campaign from "../models/Campaign.js"; // Add this import if you have Campaign model
-
-const router = express.Router();
-
-// ==================== VENDOR ROUTES ====================
->>>>>>> a92a8c52c363d84363602c48153d8d524195a9a0
 
 // GET all vendors
-router.get("/vendors/:id", async (req, res) => {
+router.get("/vendors", async (req, res) => {
   try {
-    const vendors = await Vendor.find().sort({ date: -1 });
+    const vendors = await Vendor.find();
     res.json(vendors);
   } catch (err) {
-    console.error('Error fetching vendors:', err);
     res.status(500).json({ error: "Failed to fetch vendors" });
   }
 });
 
-<<<<<<< HEAD
 // GET vendors by user ID (MUST BE BEFORE /:id route)
-=======
-// GET vendors by user ID (MUST be before /vendors/:id to avoid conflict)
->>>>>>> a92a8c52c363d84363602c48153d8d524195a9a0
 router.get("/vendors/user/:userId", async (req, res) => {
   try {
     const vendors = await Vendor.find({ userId: req.params.userId }).sort({ date: -1 });
     res.json(vendors);
   } catch (error) {
-<<<<<<< HEAD
     console.error('Error fetching vendors:', error);
-=======
-    console.error('Error fetching user vendors:', error);
->>>>>>> a92a8c52c363d84363602c48153d8d524195a9a0
     res.status(500).json({ message: error.message });
   }
 });
 
-<<<<<<< HEAD
 // GET vendor by vendorId string (like VEND-1218) - MUST BE BEFORE /:id
 router.get("/vendors/:vendorId", async (req, res) => {
   try {
@@ -62,15 +44,6 @@ router.get("/vendors/:vendorId", async (req, res) => {
       return res.status(404).json({ message: 'Vendor not found' });
     }
     
-=======
-// GET single vendor by ID
-router.get("/vendors/:id", async (req, res) => {
-  try {
-    const vendor = await Vendor.findById(req.params.id);
-    if (!vendor) {
-      return res.status(404).json({ message: "Vendor not found" });
-    }
->>>>>>> a92a8c52c363d84363602c48153d8d524195a9a0
     res.json(vendor);
   } catch (error) {
     console.error('Error fetching vendor:', error);
@@ -80,14 +53,9 @@ router.get("/vendors/:id", async (req, res) => {
 
 // POST create new vendor
 router.post("/vendors", async (req, res) => {
-<<<<<<< HEAD
   console.log("Received vendor data:", req.body);
   
-=======
->>>>>>> a92a8c52c363d84363602c48153d8d524195a9a0
   try {
-    console.log("Creating vendor:", req.body);
-    
     const vendor = new Vendor({
       userId: req.body.userId,
       vendorId: req.body.vendorId,
@@ -107,7 +75,6 @@ router.post("/vendors", async (req, res) => {
       insertUrls: req.body.insertUrls || [{ url: "" }]
     });
 
-<<<<<<< HEAD
     const newVendor = await vendor.save();
     console.log("Saved vendor:", newVendor);
     
@@ -115,119 +82,65 @@ router.post("/vendors", async (req, res) => {
   } catch (error) {
     console.error("Error saving vendor:", error);
     res.status(400).json({ message: error.message });
-=======
-    const savedVendor = await vendor.save();
-    console.log("Vendor saved:", savedVendor);
-    res.status(201).json(savedVendor);
-  } catch (err) {
-    console.error("Error creating vendor:", err);
-    res.status(400).json({ error: err.message });
->>>>>>> a92a8c52c363d84363602c48153d8d524195a9a0
   }
 });
-
-// PUT update vendor
-router.put("/vendors/:id", async (req, res) => {
+// Update campaign (fixed version—keeps UTR intact)
+router.put('/campaigns/:id', async (req, res) => {
   try {
-    const updatedVendor = await Vendor.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    
-    if (!updatedVendor) {
-      return res.status(404).json({ message: "Vendor not found" });
-    }
-    
-    res.json(updatedVendor);
-  } catch (error) {
-    console.error('Error updating vendor:', error);
-    res.status(400).json({ message: error.message });
-  }
-});
+    const { id } = req.params;
+    const updates = req.body;
 
-// DELETE vendor
-router.delete("/vendors/:id", async (req, res) => {
-  try {
-    const vendor = await Vendor.findById(req.params.id);
-    if (!vendor) {
-      return res.status(404).json({ message: "Vendor not found" });
+    console.log('✏️ Updating campaign:', id);
+    console.log('Incoming updates:', JSON.stringify(updates, null, 2));
+
+    const campaign = await Campaign.findById(id);
+
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        error: 'Campaign not found',
+      });
     }
 
-    await vendor.deleteOne();
-    res.json({ message: "Vendor deleted successfully" });
-  } catch (error) {
-    console.error('Error deleting vendor:', error);
-    res.status(500).json({ error: "Failed to delete vendor" });
-  }
-});
+    // Update all normal fields
+    Object.keys(updates).forEach((key) => {
+      if (key !== "payments") { 
+        campaign[key] = updates[key];
+      }
+    });
 
-<<<<<<< HEAD
-/* ==================== CAMPAIGN ROUTES ==================== */
+    // Special handling for payments array
+    if (updates.payments) {
+      console.log("💰 Incoming payments update:", updates.payments);
 
-// GET campaigns by vendor ID
-router.get("/campaigns/vendor/:vendorId", async (req, res) => {
-  try {
-    const campaigns = await Campaign.find({ vendorId: req.params.vendorId });
-    res.json(campaigns);
-  } catch (error) {
-    console.error('Error fetching campaigns:', error);
-    res.status(500).json({ message: error.message });
-  }
-});
+      campaign.payments = updates.payments.map(p => ({
+        date: p.date,
+        amount: p.amount,
+        utr: p.utr || ""   // ensure utr is saved
+      }));
+    }
 
-// POST create new campaign
-router.post("/campaigns", async (req, res) => {
-  console.log("Received campaign data:", req.body);
-  
-  try {
-    const campaign = new Campaign(req.body);
-    const savedCampaign = await campaign.save();
-    console.log("Saved campaign:", savedCampaign);
-    
-    res.status(201).json(savedCampaign);
-  } catch (error) {
-    console.error("Error saving campaign:", error);
-    res.status(400).json({ message: error.message });
-  }
-});
+    await campaign.save();
 
-// GET campaign by ID
-=======
-// ==================== CAMPAIGN ROUTES ====================
+    console.log("✅ Campaign updated successfully");
+    console.log("Updated payments saved:", JSON.stringify(campaign.payments, null, 2));
 
-// Get campaigns by user ID
->>>>>>> a92a8c52c363d84363602c48153d8d524195a9a0
-router.get('/campaigns/user/:userId', async (req, res) => {
-  try {
-    const { userId } = req.params;
-    
-    console.log('📊 Fetching campaigns for user:', userId);
-    
-    // Find all campaigns where the user is the creator/owner
-    const campaigns = await Campaign.find({ 
-      userId: userId  // or createdBy, ownerId - whatever field you use
-    }).sort({ createdAt: -1 }); // Sort by newest first
-    
-    console.log(`✅ Found ${campaigns.length} campaigns`);
-    
     res.json({
       success: true,
-      count: campaigns.length,
-      campaigns
+      message: "Campaign updated successfully",
+      campaign,
     });
-    
   } catch (error) {
-    console.error('❌ Error fetching user campaigns:', error);
+    console.error("❌ Error updating campaign:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch campaigns',
-      message: error.message
+      error: "Failed to update campaign",
+      message: error.message,
     });
   }
 });
 
-<<<<<<< HEAD
+
 // PUT update campaign
 router.put("/campaigns/:id", async (req, res) => {
   try {
@@ -262,17 +175,39 @@ router.delete("/campaigns/:id", async (req, res) => {
   }
 });
 
-export default router;
-=======
-// Get campaigns by vendor ID
-router.get('/campaigns/vendor/:vendorId', async (req, res) => {
+
+// Get all campaigns
+router.get('/campaigns', async (req, res) => {
   try {
-    const { vendorId } = req.params;
+    console.log('📊 Fetching all campaigns');
     
-    console.log('📊 Fetching campaigns for vendor:', vendorId);
+    const campaigns = await Campaign.find().sort({ createdAt: -1 });
+    
+    res.json({
+      success: true,
+      count: campaigns.length,
+      campaigns
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching campaigns:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch campaigns',
+      message: error.message
+    });
+  }
+});
+
+// Get campaigns by user ID - MUST come before /:id route
+router.get('/campaigns/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    console.log('📊 Fetching campaigns for user:', userId);
     
     const campaigns = await Campaign.find({ 
-      vendorId: vendorId 
+      userId: userId
     }).sort({ createdAt: -1 });
     
     console.log(`✅ Found ${campaigns.length} campaigns`);
@@ -284,7 +219,7 @@ router.get('/campaigns/vendor/:vendorId', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ Error fetching vendor campaigns:', error);
+    console.error('❌ Error fetching user campaigns:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch campaigns',
@@ -293,7 +228,38 @@ router.get('/campaigns/vendor/:vendorId', async (req, res) => {
   }
 });
 
-// Get single campaign by ID
+// Get campaigns by vendor ID - MUST come before /:id route
+router.get('/campaigns/vendor/:vendorId', async (req, res) => {
+  try {
+    const { vendorId } = req.params;
+    
+    console.log('📊 Fetching campaigns for vendor:', vendorId);
+    console.log('📍 Full URL:', req.originalUrl);
+    console.log('📍 Params:', req.params);
+    
+    const campaigns = await Campaign.find({ 
+      vendorId: vendorId 
+    }).sort({ createdAt: -1 });
+    
+    console.log(`✅ Found ${campaigns.length} campaigns for vendor ${vendorId}`);
+    
+    res.json({ 
+      success: true, 
+      count: campaigns.length,
+      campaigns 
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching vendor campaigns:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch vendor campaigns',
+      message: error.message
+    });
+  }
+});
+
+// Get single campaign by ID - MUST come after specific routes
 router.get('/campaigns/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -324,38 +290,31 @@ router.get('/campaigns/:id', async (req, res) => {
   }
 });
 
-// Get all campaigns
-router.get('/campaigns', async (req, res) => {
-  try {
-    console.log('📊 Fetching all campaigns');
-    
-    const campaigns = await Campaign.find().sort({ createdAt: -1 });
-    
-    res.json({
-      success: true,
-      count: campaigns.length,
-      campaigns
-    });
-    
-  } catch (error) {
-    console.error('❌ Error fetching campaigns:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch campaigns',
-      message: error.message
-    });
-  }
-});
-
 // Create new campaign
 router.post('/campaigns', async (req, res) => {
   try {
     const campaignData = req.body;
     
-    console.log('📝 Creating new campaign:', campaignData);
+    console.log('📝 Creating new campaign');
+    console.log('Campaign data received:', JSON.stringify(campaignData, null, 2));
     
+    // Log payments specifically to debug
+    if (campaignData.payments) {
+      console.log('💰 Payments data:', JSON.stringify(campaignData.payments, null, 2));
+      console.log('Number of payments:', campaignData.payments.length);
+    }
+    
+    // Create the campaign
     const campaign = new Campaign(campaignData);
+    
+    // Log before saving
+    console.log('Campaign object before save:', JSON.stringify(campaign.toObject(), null, 2));
+    
     await campaign.save();
+    
+    // Log after saving
+    console.log('✅ Campaign saved successfully');
+    console.log('Saved campaign payments:', JSON.stringify(campaign.payments, null, 2));
     
     res.status(201).json({
       success: true,
@@ -365,6 +324,10 @@ router.post('/campaigns', async (req, res) => {
     
   } catch (error) {
     console.error('❌ Error creating campaign:', error);
+    console.error('Error details:', error.message);
+    if (error.errors) {
+      console.error('Validation errors:', error.errors);
+    }
     res.status(500).json({
       success: false,
       error: 'Failed to create campaign',
@@ -380,6 +343,12 @@ router.put('/campaigns/:id', async (req, res) => {
     const updates = req.body;
     
     console.log('✏️ Updating campaign:', id);
+    console.log('Update data:', JSON.stringify(updates, null, 2));
+    
+    // Log payments if being updated
+    if (updates.payments) {
+      console.log('💰 Updating payments:', JSON.stringify(updates.payments, null, 2));
+    }
     
     const campaign = await Campaign.findByIdAndUpdate(
       id,
@@ -393,6 +362,9 @@ router.put('/campaigns/:id', async (req, res) => {
         error: 'Campaign not found'
       });
     }
+    
+    console.log('✅ Campaign updated successfully');
+    console.log('Updated campaign payments:', JSON.stringify(campaign.payments, null, 2));
     
     res.json({
       success: true,
@@ -426,11 +398,222 @@ router.delete('/campaigns/:id', async (req, res) => {
       });
     }
     
+    console.log('✅ Campaign deleted successfully');
+    
     res.json({
       success: true,
       message: 'Campaign deleted successfully'
     });
+      
+  } catch (error) {
+    console.error('❌ Error deleting campaign:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete campaign',
+      message: error.message
+    });
+  }
+});
+
+
+// Create new campaign
+router.post('/campaigns', async (req, res) => {
+  try {
+    const campaignData = req.body;
     
+    console.log('📝 Creating new campaign');
+    console.log('Campaign data received:', JSON.stringify(campaignData, null, 2));
+    
+    // Log payments specifically to debug
+    if (campaignData.payments) {
+      console.log('💰 Payments data:', JSON.stringify(campaignData.payments, null, 2));
+      console.log('Number of payments:', campaignData.payments.length);
+    }
+    
+    // Create the campaign
+    const campaign = new Campaign(campaignData);
+    
+    // Log before saving
+    console.log('Campaign object before save:', JSON.stringify(campaign.toObject(), null, 2));
+    
+    await campaign.save();
+    
+    // Log after saving
+    console.log('✅ Campaign saved successfully');
+    console.log('Saved campaign payments:', JSON.stringify(campaign.payments, null, 2));
+    
+    res.status(201).json({
+      success: true,
+      message: 'Campaign created successfully',
+      campaign
+    });
+    
+  } catch (error) {
+    console.error('❌ Error creating campaign:', error);
+    console.error('Error details:', error.message);
+    if (error.errors) {
+      console.error('Validation errors:', error.errors);
+    }
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create campaign',
+      message: error.message
+    });
+  }
+});
+
+
+
+router.get("/campaigns/vendor/:vendorId/count", async (req, res) => {
+  try {
+    const { vendorId } = req.params;
+
+    const totalCampaigns = await Campaign.countDocuments({
+      vendorId: vendorId
+    });
+
+    res.json({ totalCampaigns });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get("/campaigns/vendor/:vendorId/live-count", async (req, res) => {
+  try {
+    const { vendorId } = req.params;
+
+    const liveCampaigns = await Campaign.countDocuments({
+      vendorId: vendorId,
+      status: "Live" // or "Active"
+    });
+
+    res.json({ liveCampaigns });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get("/campaigns/vendor/:vendorId/stats", async (req, res) => {
+  try {
+    const { vendorId } = req.params;
+
+    const totalCampaigns = await Campaign.countDocuments({ vendorId });
+    const liveCampaigns = await Campaign.countDocuments({
+      vendorId,
+      status: "Live"
+    });
+
+    res.json({
+      totalCampaigns,
+      liveCampaigns
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
+
+router.get("/campaigns/vendor/:vendorId/stats", async (req, res) => {
+  try {
+    const { vendorId } = req.params;
+
+    const totalCampaigns = await Campaign.countDocuments({
+      vendorCode: vendorId // 🔴 change this to your actual field
+    });
+
+    const liveCampaigns = await Campaign.countDocuments({
+      vendorCode: vendorId,
+      status: { $in: ["Live", "Active", "Running"] }
+    });
+
+    res.json({ totalCampaigns, liveCampaigns });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get("/", async (req, res) => {
+  try {
+    const campaigns = await Campaign.find();
+    res.json({ success: true, campaigns });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+
+
+// Update campaign
+router.put('/campaigns/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    
+    console.log('✏️ Updating campaign:', id);
+    console.log('Update data:', JSON.stringify(updates, null, 2));
+    
+    // Log payments if being updated
+    if (updates.payments) {
+      console.log('💰 Updating payments:', JSON.stringify(updates.payments, null, 2));
+    }
+    
+    const campaign = await Campaign.findByIdAndUpdate(
+      id,
+      updates,
+      { new: true, runValidators: true }
+    );
+    
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        error: 'Campaign not found'
+      });
+    }
+    
+    console.log('✅ Campaign updated successfully');
+    console.log('Updated campaign payments:', JSON.stringify(campaign.payments, null, 2));
+    
+    res.json({
+      success: true,
+      message: 'Campaign updated successfully',
+      campaign
+    });
+    
+  } catch (error) {
+    console.error('❌ Error updating campaign:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update campaign',
+      message: error.message
+    });
+  }
+});
+
+// Delete campaign
+router.delete('/campaigns/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log('🗑️ Deleting campaign:', id);
+    
+    const campaign = await Campaign.findByIdAndDelete(id);
+    
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        error: 'Campaign not found'
+      });
+    }
+    
+    console.log('✅ Campaign deleted successfully');
+    
+    res.json({
+      success: true,
+      message: 'Campaign deleted successfully'
+    });
+      
   } catch (error) {
     console.error('❌ Error deleting campaign:', error);
     res.status(500).json({
@@ -442,4 +625,3 @@ router.delete('/campaigns/:id', async (req, res) => {
 });
 
 export default router;
->>>>>>> a92a8c52c363d84363602c48153d8d524195a9a0
