@@ -34,6 +34,7 @@ const campaignSchema = new mongoose.Schema({
   bankDetails: String,
   msg: String,
   extra: String,
+<<<<<<< HEAD
   status: { type: String, default: "Active" },
 
   payments: [paymentSchema],
@@ -45,6 +46,21 @@ campaignSchema.pre("save", function (next) {
   console.log("🔍 Saving Campaign...");
   console.log("💰 Payments:", this.payments);
   next();
+=======
+  status: { type: String, default: 'Active' },
+  payments: [{
+    date: String,
+    amount: Number,
+          utr: { type: String }   // <-- THIS MUST EXIST
+
+  }],
+  campaignLinks: [{
+    heading: String,
+    url: String
+  }]
+}, {
+  timestamps: true
+>>>>>>> 2147dbcfea20c13c10c9a41d3bf2431d7e36af94
 });
 
 campaignSchema.post("save", function (doc) {
@@ -52,4 +68,8 @@ campaignSchema.post("save", function (doc) {
   console.log("💾 Saved Payments:", doc.payments);
 });
 
+<<<<<<< HEAD
 export default mongoose.model("Campaign", campaignSchema);
+=======
+export default Campaign;
+>>>>>>> 2147dbcfea20c13c10c9a41d3bf2431d7e36af94

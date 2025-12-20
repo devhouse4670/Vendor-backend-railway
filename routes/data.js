@@ -84,6 +84,10 @@ router.post("/vendors", async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2147dbcfea20c13c10c9a41d3bf2431d7e36af94
 // Update campaign (fixed version—keeps UTR intact)
 router.put('/campaigns/:id', async (req, res) => {
   try {
@@ -140,6 +144,7 @@ router.put('/campaigns/:id', async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 
 // PUT update campaign
 router.put("/campaigns/:id", async (req, res) => {
@@ -160,6 +165,8 @@ router.put("/campaigns/:id", async (req, res) => {
   }
 });
 
+=======
+>>>>>>> 2147dbcfea20c13c10c9a41d3bf2431d7e36af94
 // DELETE campaign
 router.delete("/campaigns/:id", async (req, res) => {
   try {
