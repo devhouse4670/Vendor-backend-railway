@@ -6,6 +6,92 @@ const router = express.Router();
 
 /* ==================== VENDOR ROUTES ==================== */
 
+
+// PUT update vendor by ID
+router.put("/vendors/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log('✏️ Updating vendor:', id);
+    console.log('Update data:', JSON.stringify(req.body, null, 2));
+    
+    // Find and update the vendor
+    const updatedVendor = await Vendor.findByIdAndUpdate(
+      id,
+      {
+        name: req.body.name,
+        email: req.body.email,
+        phone: req.body.phone,
+        aadhaar: req.body.aadhaar,
+        pan: req.body.pan,
+        category: req.body.category,
+        vendorType: req.body.vendorType,
+        status: req.body.status,
+        uploadDoc: req.body.uploadDoc || "",
+        utr: req.body.utr || "",
+        msg: req.body.msg || "",
+        extra: req.body.extra || "",
+        insertUrls: req.body.insertUrls || []
+      },
+      { new: true, runValidators: true }
+    );
+    
+    if (!updatedVendor) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Vendor not found' 
+      });
+    }
+    
+    console.log('✅ Vendor updated successfully');
+    
+    res.json({
+      success: true,
+      message: 'Vendor updated successfully',
+      vendor: updatedVendor
+    });
+    
+  } catch (error) {
+    console.error('❌ Error updating vendor:', error);
+    res.status(400).json({ 
+      success: false,
+      message: error.message 
+    });
+  }
+});
+
+// DELETE vendor by ID
+router.delete("/vendors/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log('🗑️ Deleting vendor:', id);
+    
+    const vendor = await Vendor.findByIdAndDelete(id);
+    
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Vendor not found'
+      });
+    }
+    
+    console.log('✅ Vendor deleted successfully');
+    
+    res.json({
+      success: true,
+      message: 'Vendor deleted successfully'
+    });
+      
+  } catch (error) {
+    console.error('❌ Error deleting vendor:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
 // GET all vendors
 router.get("/vendors", async (req, res) => {
   try {
